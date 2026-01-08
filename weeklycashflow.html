@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gyrus & IWS - Full Feature Portal V16.4</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 20px; font-size: 16px; }
+        .main-wrapper { max-width: 1750px; margin: 0 auto; }
+        
+        .section-divider { width: 100%; text-align: center; margin: 50px 0 30px 0; border-bottom: 3px solid #fbbf24; line-height: 0.1em; }
+        .section-divider span { background: #0f172a; padding: 0 25px; color: #fbbf24; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; font-size: 24px; }
+        
+        .dual-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 60px; align-items: start; }
+        
+        .co-frame { background: #f8fafc; color: #1e293b; border-radius: 15px; padding: 30px; border-top: 8px solid #fbbf24; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
+        .co-header { text-align: center; background: #1e293b; color: #fbbf24; padding: 15px; border-radius: 10px; margin-bottom: 25px; font-weight: 800; font-size: 22px; text-transform: uppercase; }
+        
+        .cf-section { background: #fff; border: 2px solid #cbd5e1; border-radius: 10px; padding: 20px; margin-bottom: 15px; }
+        .cf-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 15px; }
+        .cf-row label { font-size: 13px; font-weight: 800; color: #475569; text-transform: uppercase; }
+        
+        input[type="text"].amt-input { width: 180px; padding: 12px; border: 2px solid #cbd5e1; border-radius: 6px; text-align: right; font-weight: 900; font-family: 'Courier New', monospace; font-size: 19px; color: #0f172a; }
+        input[type="text"].savings-input { color: #059669; border: 2px solid #10b981; } /* Distinct green for savings */
+        input[type="text"].desc-input { flex: 1; padding: 12px; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 16px; font-weight: 500; }
+        input[type="date"].date-picker { padding: 10px; border-radius: 6px; border: 2px solid #cbd5e1; font-size: 14px; width: 160px; font-weight: bold; }
+        .cf-select { padding: 10px; border-radius: 6px; border: 2px solid #cbd5e1; font-size: 14px; font-weight: 900; background: white; color: #1e293b; cursor: pointer; }
+
+        .section-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #e2e8f0; margin-top: 20px; padding-bottom: 8px; font-size: 14px; font-weight: 900; color: #1e293b; text-transform: uppercase; }
+        .sub-category-head { font-size: 12px; font-weight: 800; color: #64748b; margin: 15px 0 5px 0; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+        
+        .subtotal-row { display: flex; justify-content: flex-end; font-size: 14px; font-weight: 800; color: #64748b; margin-top: 10px; }
+        .subtotal-val { margin-left: 15px; color: #1e293b; font-size: 19px; font-family: monospace; font-weight: 900; }
+        
+        .res-box { margin-top: 15px; padding: 15px; border-radius: 8px; font-weight: 900; text-align: right; font-size: 18px; }
+        .res-inflow { background: #dcfce7; color: #166534; border-left: 6px solid #10b981; }
+        .res-outflow { background: #fee2e2; color: #991b1b; border-left: 6px solid #ef4444; }
+        
+        .res-grand { background: #1e293b; color: #fbbf24; text-align: center; border: 2px solid #fbbf24; margin-top: 25px; padding: 25px; border-radius: 10px; }
+        .ending-label { font-size: 14px; font-weight: 400; opacity: 0.9; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+        .ending-amt { display: block; font-size: 36px; font-weight: 900; font-family: monospace; }
+        
+        .btn-add { background: #1e293b; color: #fbbf24; border: none; border-radius: 5px; padding: 4px 12px; cursor: pointer; font-weight: 900; font-size: 14px; }
+        .btn-del { color: #ef4444; border: none; background: none; cursor: pointer; font-size: 26px; font-weight: bold; padding: 0 10px; }
+
+        .btn-archive { width: 100%; background: #10b981; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 20px 0 10px 0; font-size: 16px; text-transform: uppercase; }
+        .history-panel { background: #f1f5f9; border-radius: 10px; padding: 15px; border: 1px solid #cbd5e1; max-height: 250px; overflow-y: auto; margin-top: 10px; }
+        .history-title { font-size: 12px; font-weight: 900; color: #475569; text-transform: uppercase; margin-bottom: 10px; display: block; }
+        .history-item { font-size: 13px; border-bottom: 1px solid #cbd5e1; padding: 10px; display: flex; justify-content: space-between; align-items: center; background: white; margin-bottom: 8px; border-radius: 6px; }
+        .history-info { flex: 1; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="section-divider"><span>WEEKLY CASH FLOW</span></div>
+    <div class="dual-container" id="weekly_portals"></div>
+
+    <div class="section-divider"><span>MONTHLY CASH FLOW</span></div>
+    <div class="dual-container" id="monthly_portals"></div>
+</div>
+
+<script>
+    const companies = [
+        { id: 'gyrus', name: 'GYRUS INDUSTRIES CORP' }, 
+        { id: 'iws', name: 'IWS-TECHSERV CORP' }
+    ];
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const weeks = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"];
+    const f = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 });
+    const parse = (v) => parseFloat(v.toString().replace(/,/g, '')) || 0;
+
+    function createPortal(targetId, typeLabel) {
+        const container = document.getElementById(targetId);
+        companies.forEach(co => {
+            const pid = `${typeLabel}_${co.id}`;
+            container.innerHTML += `
+            <div class="co-frame">
+                <div class="co-header">${co.name} (${typeLabel.toUpperCase()})</div>
+                
+                <div class="cf-section">
+                    <div class="cf-row"><label>PERIOD</label>
+                        <div>
+                            <select id="${pid}_month" class="cf-select" onchange="updateLabels(); autoSave();">${months.map(m => `<option>${m}</option>`).join('')}</select>
+                            ${typeLabel === 'weekly' ? `<select id="${pid}_week" class="cf-select" onchange="updateLabels(); autoSave();">${weeks.map(w => `<option>${w}</option>`).join('')}</select>` : ''}
+                        </div>
+                    </div>
+                    <div class="cf-row"><label>CASH IN BANK AS OF</label>
+                        <div style="display:flex; gap:10px;">
+                            <input type="date" id="${pid}_d" class="date-picker" onchange="autoSave()">
+                            <input type="text" id="${pid}_bank" class="amt-input" placeholder="0.00" onblur="handleAmtBlur(this, '${pid}')">
+                        </div>
+                    </div>
+                    <div class="section-head"><span>ACCOUNTS RECEIVABLE</span><button class="btn-add" onclick="addRow('${pid}_ar_list', '${pid}')">+</button></div>
+                    <div id="${pid}_ar_list"></div>
+                    <div class="subtotal-row">AR Subtotal: <span class="subtotal-val" id="${pid}_ar_subtotal">0.00</span></div>
+                    <div class="res-box res-inflow">TOTAL LIQUID: <span id="${pid}_res_bank">0.00</span></div>
+                </div>
+
+                <div class="cf-section">
+                    <div class="cf-row"><label>OPEX</label><input type="text" id="${pid}_opex" class="amt-input" placeholder="0.00" onblur="handleAmtBlur(this, '${pid}')"></div>
+                    
+                    ${typeLabel === 'monthly' ? `
+                    <div class="cf-row"><label style="color:#10b981">MONTHLY SAVINGS</label>
+                        <input type="text" id="${pid}_savings" class="amt-input savings-input" placeholder="0.00" onblur="handleAmtBlur(this, '${pid}')">
+                    </div>` : ''}
+
+                    <div class="section-head">ACCOUNTS PAYABLE</div>
+                    <div class="sub-category-head"><span>IMPORT</span><button class="btn-add" onclick="addRow('${pid}_ap_import', '${pid}')">+</button></div>
+                    <div id="${pid}_ap_import"></div>
+                    <div class="sub-category-head"><span>TRADE</span><button class="btn-add" onclick="addRow('${pid}_ap_trade', '${pid}')">+</button></div>
+                    <div id="${pid}_ap_trade"></div>
+                    <div class="sub-category-head"><span>NON-TRADE</span><button class="btn-add" onclick="addRow('${pid}_ap_nontrade', '${pid}')">+</button></div>
+                    <div id="${pid}_ap_nontrade"></div>
+                    
+                    <div class="subtotal-row">AP Subtotal: <span class="subtotal-val" id="${pid}_ap_subtotal">0.00</span></div>
+                    <div class="res-box res-outflow">TOTAL OBLIGATIONS: <span id="${pid}_res_cost">0.00</span></div>
+                </div>
+
+                <div class="res-box res-grand">
+                    <div class="ending-label">ENDING BALANCE: END OF <span id="${pid}_label_period">...</span></div>
+                    <span class="ending-amt" id="${pid}_res_grand">0.00</span>
+                </div>
+
+                <button class="btn-archive" onclick="saveArchive('${pid}')">Archive Snapshot</button>
+                <div class="history-panel"><span class="history-title">History</span><div id="${pid}_history_list"></div></div>
+            </div>`;
+        });
+    }
+
+    function addRow(containerId, portalId, name = "", val = "", skipSave = false) {
+        const div = document.createElement('div');
+        div.className = 'cf-row'; div.style.marginTop = "8px";
+        div.innerHTML = `<input type="text" value="${name}" placeholder="..." class="desc-input" onblur="autoSave()"><input type="text" value="${val}" class="amt-input sub-val" placeholder="0.00" onblur="handleAmtBlur(this, '${portalId}')"><button class="btn-del" onclick="this.parentElement.remove();calculatePortal('${portalId}');autoSave();">×</button>`;
+        document.getElementById(containerId).appendChild(div);
+        if(!skipSave) calculatePortal(portalId);
+    }
+
+    function handleAmtBlur(el, portalId) { el.value = f.format(parse(el.value)); calculatePortal(portalId); autoSave(); }
+
+    function calculatePortal(portalId) {
+        let ar = 0; document.querySelectorAll(`#${portalId}_ar_list .sub-val`).forEach(el => ar += parse(el.value));
+        let ap = 0;
+        ['_ap_import', '_ap_trade', '_ap_nontrade'].forEach(sec => {
+            document.querySelectorAll(`#${portalId}${sec} .sub-val`).forEach(el => ap += parse(el.value));
+        });
+        
+        let bank = parse(document.getElementById(`${portalId}_bank`).value);
+        let opex = parse(document.getElementById(`${portalId}_opex`).value);
+        
+        // Include Savings in obligations if it exists (Monthly only)
+        let savingsEl = document.getElementById(`${portalId}_savings`);
+        let savings = savingsEl ? parse(savingsEl.value) : 0;
+
+        let liquid = bank + ar;
+        let obligations = opex + ap + savings;
+        
+        document.getElementById(`${portalId}_ar_subtotal`).innerText = f.format(ar);
+        document.getElementById(`${portalId}_ap_subtotal`).innerText = f.format(ap);
+        document.getElementById(`${portalId}_res_bank`).innerText = f.format(liquid);
+        document.getElementById(`${portalId}_res_cost`).innerText = f.format(obligations);
+        document.getElementById(`${portalId}_res_grand`).innerText = f.format(liquid - obligations);
+    }
+
+    function updateLabels() {
+        ['weekly_gyrus', 'weekly_iws', 'monthly_gyrus', 'monthly_iws'].forEach(id => {
+            const m = document.getElementById(`${id}_month`).value;
+            const wEl = document.getElementById(`${id}_week`);
+            const w = wEl ? wEl.value : "";
+            document.getElementById(`${id}_label_period`).innerText = `${m.toUpperCase()} ${w.toUpperCase()}`;
+        });
+    }
+
+    function autoSave() {
+        const data = {};
+        ['weekly_gyrus', 'weekly_iws', 'monthly_gyrus', 'monthly_iws'].forEach(id => {
+            const savingsEl = document.getElementById(`${id}_savings`);
+            data[id] = {
+                month: document.getElementById(`${id}_month`).value,
+                week: document.getElementById(`${id}_week`) ? document.getElementById(`${id}_week`).value : "",
+                date: document.getElementById(`${id}_d`).value,
+                bank: document.getElementById(`${id}_bank`).value,
+                opex: document.getElementById(`${id}_opex`).value,
+                savings: savingsEl ? savingsEl.value : "0",
+                ar_list: getRows(`${id}_ar_list`),
+                ap_import: getRows(`${id}_ap_import`),
+                ap_trade: getRows(`${id}_ap_trade`),
+                ap_nontrade: getRows(`${id}_ap_nontrade`),
+                history_html: document.getElementById(`${id}_history_list`).innerHTML
+            };
+        });
+        localStorage.setItem('corp_portal_v16_4', JSON.stringify(data));
+    }
+
+    function getRows(id) { return Array.from(document.getElementById(id).children).map(r => ({ name: r.children[0].value, val: r.children[1].value })); }
+
+    function saveArchive(pid) {
+        const savingsEl = document.getElementById(`${pid}_savings`);
+        const snapshot = {
+            month: document.getElementById(`${pid}_month`).value,
+            week: document.getElementById(`${pid}_week`) ? document.getElementById(`${pid}_week`).value : "",
+            date: document.getElementById(`${pid}_d`).value,
+            bank: document.getElementById(`${pid}_bank`).value,
+            opex: document.getElementById(`${pid}_opex`).value,
+            savings: savingsEl ? savingsEl.value : "0",
+            ar_list: getRows(`${pid}_ar_list`),
+            ap_import: getRows(`${pid}_ap_import`),
+            ap_trade: getRows(`${pid}_ap_trade`),
+            ap_nontrade: getRows(`${pid}_ap_nontrade`),
+            grand: document.getElementById(`${pid}_res_grand`).innerText
+        };
+        const list = document.getElementById(`${pid}_history_list`);
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `<div class="history-info" onclick='loadArchive("${pid}", ${JSON.stringify(snapshot)})'><strong>${snapshot.month} ${snapshot.week}</strong><br><small>Bal: ${snapshot.grand}</small></div><button class="btn-del" style="font-size:18px" onclick="this.parentElement.remove(); autoSave();">×</button>`;
+        list.prepend(item);
+        autoSave();
+    }
+
+    function loadArchive(pid, data) {
+        if(!confirm("Load archive?")) return;
+        document.getElementById(`${pid}_month`).value = data.month;
+        if(data.week && document.getElementById(`${pid}_week`)) document.getElementById(`${pid}_week`).value = data.week;
+        document.getElementById(`${pid}_d`).value = data.date;
+        document.getElementById(`${pid}_bank`).value = data.bank;
+        document.getElementById(`${pid}_opex`).value = data.opex;
+        if(document.getElementById(`${pid}_savings`)) document.getElementById(`${pid}_savings`).value = data.savings;
+        ['_ar_list', '_ap_import', '_ap_trade', '_ap_nontrade'].forEach(sec => {
+            const container = document.getElementById(`${pid}${sec}`);
+            container.innerHTML = "";
+            const rowData = data[sec.replace('_', '')];
+            if(rowData) rowData.forEach(r => addRow(`${pid}${sec}`, pid, r.name, r.val, true));
+        });
+        calculatePortal(pid);
+        updateLabels();
+        autoSave();
+    }
+
+    window.onload = () => {
+        createPortal('weekly_portals', 'weekly');
+        createPortal('monthly_portals', 'monthly');
+        const saved = localStorage.getItem('corp_portal_v16_4');
+        if (saved) {
+            const data = JSON.parse(saved);
+            Object.keys(data).forEach(pid => {
+                const d = data[pid];
+                if(document.getElementById(`${pid}_month`)) document.getElementById(`${pid}_month`).value = d.month;
+                if(d.week && document.getElementById(`${pid}_week`)) document.getElementById(`${pid}_week`).value = d.week;
+                document.getElementById(`${pid}_d`).value = d.date;
+                document.getElementById(`${pid}_bank`).value = d.bank;
+                document.getElementById(`${pid}_opex`).value = d.opex;
+                if(document.getElementById(`${pid}_savings`)) document.getElementById(`${pid}_savings`).value = d.savings;
+                d.ar_list.forEach(r => addRow(`${pid}_ar_list`, pid, r.name, r.val, true));
+                d.ap_import.forEach(r => addRow(`${pid}_ap_import`, pid, r.name, r.val, true));
+                d.ap_trade.forEach(r => addRow(`${pid}_ap_trade`, pid, r.name, r.val, true));
+                d.ap_nontrade.forEach(r => addRow(`${pid}_ap_nontrade`, pid, r.name, r.val, true));
+                document.getElementById(`${pid}_history_list`).innerHTML = d.history_html || "";
+                calculatePortal(pid);
+            });
+        }
+        updateLabels();
+    };
+</script>
+</body>
+</html>
